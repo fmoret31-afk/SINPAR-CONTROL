@@ -372,7 +372,7 @@ footer.foot { text-align: center; font-size: .68rem; color: var(--text-muted); b
 </head>
 <body>
 
-<!-- SIDEBAR (claro) -->
+<!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="brand">
     <div class="brand-mark">
@@ -509,7 +509,7 @@ footer.foot { text-align: center; font-size: .68rem; color: var(--text-muted); b
       </div>
     </div>
 
-    <!-- INVENTARIO mejorado -->
+    <!-- INVENTARIO -->
     <div id="module-inventario" class="module-page">
       <div class="toolbar">
         <div class="search-field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg><input placeholder="Buscar producto…" oninput="renderInventario()" id="buscarProducto"/></div>
@@ -595,7 +595,7 @@ footer.foot { text-align: center; font-size: .68rem; color: var(--text-muted); b
   <footer class="foot">Atelier CRM · Datos guardados localmente · <span id="lastUpdate2">—</span></footer>
 </div>
 
-<!-- MODALES (igual que antes, solo cambio de estilo, el contenido es el mismo) -->
+<!-- MODALES -->
 <!-- Venta -->
 <div id="modalVenta" class="modal-overlay">
   <div class="modal">
@@ -759,7 +759,7 @@ footer.foot { text-align: center; font-size: .68rem; color: var(--text-muted); b
 <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg><span id="toastMsg"></span></div>
 
 <script>
-/* ================= CONFIGURACIÓN ================= */
+// ================= CONFIGURACIÓN =================
 let WHATSAPP_NUMBER = "51921348340";
 let SHEETS_CONFIG = { url:'', key:'', auto:false };
 
@@ -814,7 +814,7 @@ let chartInstance = null;
 let activeChartType = 'category';
 let filtroInventario = 'all';
 
-/* ================= UTILES ================= */
+// ================= UTILES =================
 function toast(msg, isError=false){
   const t = document.getElementById('toast');
   document.getElementById('toastMsg').textContent = msg;
@@ -834,7 +834,7 @@ function transformarUrlDrive(url) {
   return fileId ? `https://lh3.googleusercontent.com/d/${fileId}` : url;
 }
 
-/* ================= PERSISTENCIA ================= */
+// ================= PERSISTENCIA =================
 function cargarData(){
   const stored = localStorage.getItem('atelierCrmData');
   if(stored){
@@ -860,7 +860,7 @@ function guardarData(){
   if(SHEETS_CONFIG.auto && SHEETS_CONFIG.url){ sincronizarConSheets(true); }
 }
 
-/* ================= NAVEGACIÓN ================= */
+// ================= NAVEGACIÓN =================
 const TITULOS = {
   dashboard:['Resumen','Panel general'], ventas:['Pipeline','Negociaciones'],
   clientes:['Directorio','Clientes'], inventario:['Catálogo','Inventario'],
@@ -888,7 +888,7 @@ function navegar(modulo){
   }
 }
 
-/* ================= CONTADORES Y DASHBOARD ================= */
+// ================= CONTADORES Y DASHBOARD =================
 function actualizarContadores(){
   document.getElementById('cnt-ventas').textContent = data.ventas.length;
   document.getElementById('cnt-clientes').textContent = data.clientes.length;
@@ -909,18 +909,15 @@ function renderDashboard(){
   document.getElementById('taller-count').textContent = data.taller.length+' órdenes';
   document.getElementById('soporte-count').textContent = data.soporte.length+' tickets';
 
-  // Mini kanban
   const mini = document.getElementById('dashMiniKanban');
   mini.innerHTML = ETAPAS_VENTA.map(e=>{
     const n = data.ventas.filter(v=>v.etapa===e.id).length;
     return `<div class="stat-card"><div class="stat-num" style="color:${e.accent};font-size:1.9rem;">${n}</div><div class="stat-label">${esc(e.label)}</div></div>`;
   }).join('');
-
-  // Gráfico
   renderChart(activeChartType);
 }
 
-/* ================= GRÁFICOS (Chart.js) ================= */
+// ================= GRÁFICOS =================
 function renderChart(type){
   const ctx = document.getElementById('dashChart').getContext('2d');
   if(chartInstance) chartInstance.destroy();
@@ -982,7 +979,7 @@ function selectChart(type){
   renderChart(type);
 }
 
-/* ================= VENTAS ================= */
+// ================= VENTAS =================
 function cambiarVistaKanban(){
   vistaVentas='kanban';
   document.getElementById('vt-kanban').classList.add('active');
@@ -1067,7 +1064,7 @@ function initSortable(containerId, groupName){
   });
 }
 
-/* ================= CLIENTES ================= */
+// ================= CLIENTES =================
 function filtroClientes(){
   const q=(document.getElementById('buscarCliente')?.value||'').toLowerCase();
   return q ? data.clientes.filter(c=>[c.nombre,c.email,c.telefono,c.notas].join(' ').toLowerCase().includes(q)) : data.clientes;
@@ -1086,7 +1083,7 @@ function renderClientes(){
   renderDashboard();
 }
 
-/* ================= INVENTARIO (mejorado) ================= */
+// ================= INVENTARIO =================
 function setFiltroInventario(tipo){
   filtroInventario = tipo;
   document.querySelectorAll('#module-inventario .filter-btn[data-filter]').forEach(b=>b.classList.toggle('active', b.dataset.filter===tipo));
@@ -1153,7 +1150,7 @@ function renderInventario(){
   renderDashboard();
 }
 
-/* ================= TALLER ================= */
+// ================= TALLER =================
 function renderTaller(){
   const container = document.getElementById('taller-kanban');
   container.innerHTML = ETAPAS_TALLER.map(etapa=>{
@@ -1182,7 +1179,7 @@ function renderTaller(){
   renderDashboard();
 }
 
-/* ================= SOPORTE ================= */
+// ================= SOPORTE =================
 function renderSoporte(){
   const container = document.getElementById('soporte-kanban');
   container.innerHTML = ETAPAS_SOPORTE.map(etapa=>{
@@ -1211,7 +1208,7 @@ function renderSoporte(){
   renderDashboard();
 }
 
-/* ================= MODALES CRUD ================= */
+// ================= CRUD MODALES =================
 function cerrarModal(id){ document.getElementById(id).classList.remove('open'); }
 function abrirModal(id){ document.getElementById(id).classList.add('open'); }
 
@@ -1329,7 +1326,7 @@ function guardarSoporte(e){
 function editarSoporte(id){ abrirModalSoporte(id); }
 function eliminarSoporte(id){ if(!confirm('¿Eliminar este ticket?'))return; data.soporte=data.soporte.filter(s=>s.id!==id); guardarData(); renderSoporte(); toast('Ticket eliminado'); }
 
-/* ================= EXPORTAR / IMPORTAR ================= */
+// ================= EXPORTAR / IMPORTAR =================
 function exportarTodo(){
   const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -1377,7 +1374,7 @@ function importarTodo(event){
   event.target.value='';
 }
 
-/* ================= GOOGLE SHEETS SYNC ================= */
+// ================= GOOGLE SHEETS SYNC =================
 function actualizarUiConexion(){
   const dot = document.getElementById('syncDot');
   const label = document.getElementById('syncLabel');
@@ -1404,12 +1401,22 @@ async function probarConexionSheets(){
   try{
     const resp = await fetch(url+(url.includes('?')?'&':'?')+'action=ping'+(document.getElementById('cfgKey').value?'&key='+encodeURIComponent(document.getElementById('cfgKey').value):''));
     const json = await resp.json();
-    if(json && json.ok){ toast('Conexión exitosa con Google Sheets'); }
-    else{ toast('El script respondió pero sin confirmación "ok"', true); }
-  }catch(err){ toast('No se pudo conectar: '+err.message, true); }
+    console.log('Ping response:', json);
+    if(json && json.ok){ 
+      toast('✅ Conexión exitosa con Google Sheets'); 
+    } else {
+      const msg = json && json.error ? json.error : 'Respuesta inesperada';
+      toast('❌ Error: ' + msg, true);
+    }
+  }catch(err){ 
+    toast('❌ No se pudo conectar: '+err.message, true); 
+  }
 }
 async function sincronizarConSheets(silencioso=false){
-  if(!SHEETS_CONFIG.url){ if(!silencioso) toast('Configura primero la URL en Configuración', true); return; }
+  if(!SHEETS_CONFIG.url){ 
+    if(!silencioso) toast('Configura primero la URL en Configuración', true); 
+    return; 
+  }
   const btn = document.getElementById('btnSyncNow');
   if(btn && !silencioso){ btn.style.opacity=.6; }
   try{
@@ -1420,21 +1427,34 @@ async function sincronizarConSheets(silencioso=false){
       body: JSON.stringify(payload)
     });
     const json = await resp.json();
-    if(json && json.ok){ if(!silencioso) toast('Sincronizado con Google Sheets'); }
-    else { if(!silencioso) toast('El script respondió con un error', true); }
-  }catch(err){ if(!silencioso) toast('Error al sincronizar: '+err.message, true); }
-  finally { if(btn && !silencioso){ btn.style.opacity=1; } }
+    console.log('Sync response:', json);
+    if(json && json.ok){
+      if(!silencioso) toast('✅ Sincronizado con Google Sheets');
+    } else {
+      const msg = json && json.error ? json.error : 'Error desconocido';
+      if(!silencioso) toast('❌ Error: ' + msg, true);
+    }
+  }catch(err){
+    if(!silencioso) toast('❌ Error de red: '+err.message, true);
+  }
+  finally {
+    if(btn && !silencioso){ btn.style.opacity=1; }
+  }
 }
 async function traerDeSheets(){
   if(!SHEETS_CONFIG.url){ toast('Configura primero la URL', true); return; }
   try{
     const resp = await fetch(SHEETS_CONFIG.url+(SHEETS_CONFIG.url.includes('?')?'&':'?')+'action=pull'+(SHEETS_CONFIG.key?'&key='+encodeURIComponent(SHEETS_CONFIG.key):''));
     const json = await resp.json();
+    console.log('Pull response:', json);
     if(json && json.ok && json.data){
       data = json.data; guardarDataLocal(); navegar(currentModule);
-      toast('Datos traídos desde Google Sheets');
-    } else { toast('No se pudo leer la hoja', true); }
-  }catch(err){ toast('Error: '+err.message, true); }
+      toast('✅ Datos traídos desde Google Sheets');
+    } else {
+      const msg = json && json.error ? json.error : 'No se pudo leer la hoja';
+      toast('❌ Error: ' + msg, true);
+    }
+  }catch(err){ toast('❌ Error: '+err.message, true); }
 }
 
 const SCRIPT_MODELO = `function doGet(e){
@@ -1495,7 +1515,7 @@ function copiarScriptModelo(){
   toast('Código copiado al portapapeles');
 }
 
-/* ================= INIT ================= */
+// ================= INIT =================
 cargarData();
 navegar('dashboard');
 

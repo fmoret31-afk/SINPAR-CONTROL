@@ -2,29 +2,30 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Mi Página con Firebase</title>
+  <title>Mi App - Sinpar</title>
 </head>
 <body>
 
-  <h1>¡Página conectada a Firebase!</h1>
+  <h1>¡Firebase conectado con éxito!</h1>
 
-  <!-- 1. Cargar Firebase desde internet -->
+  <!-- Conexión a Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 
-    // 2. TUS CLAVES (Cópialas desde la web de Firebase)
+    // Tus credenciales
     const firebaseConfig = {
-      apiKey: "TU_API_KEY",
-      authDomain: "TU_PROYECTO.firebaseapp.com",
-      projectId: "TU_PROYECTO",
-      storageBucket: "TU_PROYECTO.appspot.com",
-      messagingSenderId: "TU_ID",
-      appId: "TU_APP_ID"
+      apiKey: "AIzaSyBMqkvcBUTtuKMgsLJTsibP7zElgsqaWYI",
+      authDomain: "sinpar-64eba.firebaseapp.com",
+      projectId: "sinpar-64eba",
+      storageBucket: "sinpar-64eba.firebasestorage.app",
+      messagingSenderId: "762174790274",
+      appId: "1:762174790274:web:acbf9a8fb5e54173a7b29b",
+      measurementId: "G-EVCGTY8GZE"
     };
 
-    // 3. Encender Firebase
+    // Inicializar Firebase
     const app = initializeApp(firebaseConfig);
-    console.log("Firebase listo para usar");
+    console.log("Firebase está listo para usarse");
   </script>
 
 </body>

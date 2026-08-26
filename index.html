@@ -1,616 +1,102 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SIN PAR — Gestión de Joyería</title>
-
-  <!-- Fuentes e Iconos -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Fraunces:opsz,wght@9..144,300;400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-
-  <!-- Chart.js para los gráficos -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- SDKs de Firebase v9+ (Módulos) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { 
-      getFirestore, 
-      collection, 
-      onSnapshot, 
-      doc, 
-      setDoc, 
-      updateDoc, 
-      deleteDoc 
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    // 🔴 1. CONFIGURA TUS CLAVES DE FIREBASE AQUÍ
-    const firebaseConfig = {
-      apiKey: "TU_API_KEY",
-      authDomain: "TU_PROYECTO.firebaseapp.com",
-      projectId: "TU_PROYECTO_ID",
-      storageBucket: "TU_PROYECTO.appspot.com",
-      messagingSenderId: "TU_SENDER_ID",
-      appId: "TU_APP_ID"
-    };
-
-    // Inicializar Firebase y Firestore
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // Hacer disponibles las funciones globalmente
-    window.db = db;
-    window.fbCollection = collection;
-    window.fbOnSnapshot = onSnapshot;
-    window.fbDoc = doc;
-    window.fbSetDoc = setDoc;
-    window.fbUpdateDoc = updateDoc;
-    window.fbDeleteDoc = deleteDoc;
-  </script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema EOQ - Registro de Inventarios</title>
   <style>
-    :root {
-      --gold-primary: #A9822F;
-      --gold-light: #F4EAD3;
-      --bg-cream: #FAF7F0;
-      --bg-card: #FFFFFF;
-      --text-dark: #2B2625;
-      --text-muted: #8B8378;
-      --border-color: #EFE7D8;
-      --shadow: 0 10px 30px rgba(0,0,0,0.05);
-      --radius: 12px;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
-    body { background-color: var(--bg-cream); color: var(--text-dark); padding-bottom: 60px; }
-
-    header {
-      background: #FFFFFF;
-      border-bottom: 1px solid var(--border-color);
-      padding: 20px;
-      text-align: center;
-      box-shadow: var(--shadow);
-    }
-    header h1 { font-family: 'Cinzel', serif; font-size: 1.8rem; letter-spacing: 4px; color: var(--gold-primary); }
-    header p { font-family: 'Fraunces', serif; font-style: italic; color: var(--text-muted); font-size: 0.9rem; }
-
-    .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-
-    /* KPIs */
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-    .kpi-card {
-      background: var(--bg-card);
-      padding: 20px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border-color);
-      box-shadow: var(--shadow);
-    }
-    .kpi-card h4 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-    .kpi-card .value { font-family: 'Fraunces', serif; font-size: 1.6rem; color: var(--gold-primary); margin-top: 5px; }
-
-    /* Barra de Búsqueda y Filtros */
-    .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; justify-content: space-between; }
-    .search-box { position: relative; flex: 1; min-width: 250px; }
-    .search-box input {
-      width: 100%;
-      padding: 10px 35px 10px 15px;
-      border-radius: 20px;
-      border: 1px solid var(--border-color);
-      outline: none;
-    }
-    .search-box i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
-
-    .filters { display: flex; gap: 8px; flex-wrap: wrap; }
-    .filter-btn {
-      padding: 8px 16px;
-      border-radius: 20px;
-      border: 1px solid var(--border-color);
-      background: #fff;
-      cursor: pointer;
-      font-size: 0.85rem;
-      transition: all 0.3s;
-    }
-    .filter-btn.active, .filter-btn:hover { background: var(--gold-primary); color: #fff; border-color: var(--gold-primary); }
-
-    /* Gráficos */
-    .chart-container {
-      background: #fff;
-      padding: 20px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border-color);
-      margin-bottom: 25px;
-      box-shadow: var(--shadow);
-    }
-    .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .chart-tabs { display: flex; gap: 5px; }
-    .chart-tab {
-      padding: 5px 10px;
-      font-size: 0.75rem;
-      border: 1px solid var(--border-color);
-      background: #fff;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .chart-tab.active { background: var(--gold-light); border-color: var(--gold-primary); color: var(--gold-primary); }
-
-    /* Rejilla de Productos */
-    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
-    .product-card {
-      background: #fff;
-      border-radius: var(--radius);
-      border: 1px solid var(--border-color);
-      padding: 15px;
-      box-shadow: var(--shadow);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .product-card h3 { font-family: 'Fraunces', serif; font-size: 1.1rem; margin-bottom: 5px; }
-    .product-card .sku { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; }
-    .product-card .price { font-size: 1.2rem; color: var(--gold-primary); font-weight: 600; margin-bottom: 10px; }
-
-    .action-btn {
-      width: 100%;
-      padding: 8px;
-      border-radius: 6px;
-      border: none;
-      background: var(--gold-primary);
-      color: #fff;
-      cursor: pointer;
-      font-weight: 500;
-      margin-top: 5px;
-    }
-    .action-btn.secondary { background: #eee; color: var(--text-dark); }
-    .action-btn:hover { opacity: 0.9; }
-
-    /* Modal Formulario */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
-      align-items: center; justify-content: center;
-      z-index: 1000;
-    }
-    .modal.active { display: flex; }
-    .modal-content {
-      background: #fff;
-      padding: 25px;
-      border-radius: var(--radius);
-      width: 100%;
-      max-width: 450px;
-    }
-    .modal-content h2 { font-family: 'Cinzel', serif; margin-bottom: 15px; color: var(--gold-primary); }
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted); }
-    .form-group input, .form-group select {
-      width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; outline: none;
-    }
-
-    /* Toast notification */
-    #toast {
-      position: fixed;
-      bottom: 20px; right: 20px;
-      background: var(--text-dark);
-      color: #fff;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      display: none;
-      z-index: 2000;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
+    :root { --primary: #1B365D; --secondary: #117A65; --bg: #f4f7f6; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; }
+    .container { max-width: 650px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+    h2 { color: var(--primary); margin-top: 0; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .full-width { grid-column: span 2; }
+    label { font-weight: 600; font-size: 13px; color: #444; display: block; margin-bottom: 4px; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+    input:focus { border-color: var(--secondary); outline: none; }
+    .section-title { font-weight: bold; color: var(--primary); margin-top: 15px; margin-bottom: 5px; grid-column: span 2; font-size: 14px; border-left: 4px solid var(--secondary); padding-left: 8px; }
+    button { grid-column: span 2; background: var(--secondary); color: white; border: none; padding: 14px; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 15px; transition: background 0.2s; }
+    button:hover { background: #0e6251; }
+    #msg { grid-column: span 2; text-align: center; font-weight: bold; margin-top: 10px; }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>SIN PAR</h1>
-    <p>Colección & Control de Inventario</p>
-  </header>
+<div class="container">
+  <h2>Control de Inventario EOQ / ROP</h2>
+  <form id="eoqForm" class="grid">
+    
+    <div class="section-title">1. Información del Producto</div>
+    <div><label>SKU / Código:</label><input type="text" id="sku" required placeholder="Ej: JOY-001"></div>
+    <div><label>Categoría:</label><input type="text" id="categoria" placeholder="Ej: Anillos"></div>
+    <div class="full-width"><label>Descripción del Producto:</label><input type="text" id="descripcion" required placeholder="Ej: Collar de Plata 925"></div>
 
-  <div class="container">
-    <!-- Métricas KPIs -->
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <h4>Total Piezas</h4>
-        <div class="value" id="kpiTotal">0</div>
-      </div>
-      <div class="kpi-card">
-        <h4>Valor Inventario</h4>
-        <div class="value" id="kpiValor">S/ 0.00</div>
-      </div>
-      <div class="kpi-card">
-        <h4>Ventas Registradas</h4>
-        <div class="value" id="kpiVentas">0</div>
-      </div>
-      <div class="kpi-card">
-        <h4>Por Cobrar</h4>
-        <div class="value" id="kpiPorPagar">S/ 0.00</div>
-      </div>
-    </div>
+    <div class="section-title">2. Demanda y Proveedor</div>
+    <div><label>Precio Unitario (P) [S/]:</label><input type="number" step="0.01" id="precio" required placeholder="50.90"></div>
+    <div><label>Demanda Anual (D) [Unidades]:</label><input type="number" id="demanda" required placeholder="1500"></div>
+    <div class="full-width"><label>Plazo Entrega Proveedor (L) [Días]:</label><input type="number" id="plazo" required placeholder="15"></div>
 
-    <!-- Filtros y Búsqueda -->
-    <div class="controls">
-      <div class="search-box" id="searchBox">
-        <input type="text" id="searchInput" placeholder="Buscar por SKU, Nombre o Categoría..." oninput="onSearchInput(this.value)" />
-        <i class="fa-solid fa-magnifying-glass"></i>
-      </div>
+    <div class="section-title">3. Parámetros de Costes</div>
+    <div><label>Coste Pedido (k) [S/ orden]:</label><input type="number" step="0.01" id="k" required placeholder="29.69"></div>
+    <div><label>Coste Fijo Almacén (a) [S/ unid/año]:</label><input type="number" step="0.01" id="a" required placeholder="5.00"></div>
+    <div><label>Tasa Oportunidad (i) [% anual]:</label><input type="number" step="0.1" id="i" required placeholder="10"></div>
+    <div><label>Stock Seguridad (Ss) [Unid]:</label><input type="number" id="ss" required placeholder="20"></div>
 
-      <div class="filters">
-        <button class="filter-btn active" data-filter="activos" onclick="setFilter('activos')">En Stock</button>
-        <button class="filter-btn" data-filter="vendidos" onclick="setFilter('vendidos')">Vendidos</button>
-        <button class="filter-btn" data-filter="por-pagar" onclick="setFilter('por-pagar')">Por Pagar</button>
-        <button class="filter-btn" style="background:#A9822F; color:#fff;" onclick="openModal()">+ Agregar Pieza</button>
-      </div>
-    </div>
+    <div class="section-title">4. Estado Actual</div>
+    <div class="full-width"><label>Stock Actual en Almacén [Unidades]:</label><input type="number" id="stockActual" required placeholder="45"></div>
 
-    <!-- Gráfico -->
-    <div class="chart-container">
-      <div class="chart-header">
-        <h3 style="font-family:'Fraunces', serif; font-size:1rem;">Análisis Visual</h3>
-        <div class="chart-tabs">
-          <button class="chart-tab active" data-chart="category" onclick="selectChart('category')">Categorías</button>
-          <button class="chart-tab" data-chart="sales" onclick="selectChart('sales')">Ventas</button>
-        </div>
-      </div>
-      <div style="position: relative; height:220px;">
-        <canvas id="activeChart"></canvas>
-      </div>
-    </div>
+    <button type="submit" id="btnSubmit">Guardar en Google Sheets</button>
+    <div id="msg"></div>
+  </form>
+</div>
 
-    <!-- Contenedor del Inventario -->
-    <div class="product-grid" id="productGrid">
-      <!-- Se carga dinámicamente -->
-    </div>
-  </div>
+<script>
+  // INSERTA AQUÍ LA URL GENERADA POR GOOGLE APPS SCRIPT
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyGL3psK5YxgPnEXLs04dZROD9h8D1N_gWSXs_i-_J8GdfZfd28q5ZIDP1rnTRPafc9/exec";
 
-  <!-- Modal para Crear/Editar Producto -->
-  <div class="modal" id="productModal">
-    <div class="modal-content">
-      <h2 id="modalTitle">Nueva Pieza</h2>
-      <form id="productForm" onsubmit="guardarProductoFirebase(event)">
-        <input type="hidden" id="prodId" />
-        <div class="form-group">
-          <label>SKU</label>
-          <input type="text" id="prodSku" required placeholder="Ej. SP-001" />
-        </div>
-        <div class="form-group">
-          <label>Nombre de la Pieza</label>
-          <input type="text" id="prodNombre" required placeholder="Ej. Anillo Solitario Oro 18K" />
-        </div>
-        <div class="form-group">
-          <label>Categoría</label>
-          <select id="prodCategoria" required>
-            <option value="Anillos">Anillos</option>
-            <option value="Collares">Collares</option>
-            <option value="Pulseras">Pulseras</option>
-            <option value="Aretes">Aretes</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Precio (S/)</label>
-          <input type="number" step="0.01" id="prodPrecio" required placeholder="0.00" />
-        </div>
-        <div style="display:flex; gap:10px; margin-top:20px;">
-          <button type="button" class="action-btn secondary" onclick="closeModal()">Cancelar</button>
-          <button type="submit" class="action-btn">Guardar en Firebase</button>
-        </div>
-      </form>
-    </div>
-  </div>
+  document.getElementById('eoqForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmit');
+    const msg = document.getElementById('msg');
+    
+    btn.disabled = true;
+    msg.style.color = '#333';
+    msg.innerText = "Enviando datos a Google Sheets...";
 
-  <!-- Toast -->
-  <div id="toast">Notificación</div>
+    const payload = {
+      sku: document.getElementById('sku').value,
+      descripcion: document.getElementById('descripcion').value,
+      categoria: document.getElementById('categoria').value,
+      precio: document.getElementById('precio').value,
+      demanda: document.getElementById('demanda').value,
+      plazo: document.getElementById('plazo').value,
+      k: document.getElementById('k').value,
+      a: document.getElementById('a').value,
+      i: document.getElementById('i').value,
+      ss: document.getElementById('ss').value,
+      stockActual: document.getElementById('stockActual').value
+    };
 
-  <!-- Script Principal -->
-  <script>
-    let inventario = [];
-    let filtroActivo = 'activos';
-    let terminoBusqueda = '';
-    let activeChartType = 'category';
-    let currentChart = null;
-
-    // --- CONEXIÓN FIREBASE EN TIEMPO REAL ---
-    function iniciarSincronizacionFirebase() {
-      // Espera a que los SDKs carguen completamente
-      const checkFB = setInterval(() => {
-        if (window.db) {
-          clearInterval(checkFB);
-          
-          // Escuchar cambios en la colección 'inventario' en tiempo real
-          const colRef = window.fbCollection(window.db, "inventario");
-          window.fbOnSnapshot(colRef, (snapshot) => {
-            inventario = [];
-            snapshot.forEach((doc) => {
-              inventario.push({ id: doc.id, ...doc.data() });
-            });
-            actualizarKPIs();
-            renderizarTodo();
-            showToast("✨ Datos sincronizados con Firebase");
-          }, (error) => {
-            console.error("Error al conectar con Firebase:", error);
-            showToast("⚠️ Error de conexión con Firebase");
-          });
-        }
-      }, 100);
-    }
-
-    // --- RENDERIZADO DE INTERFAZ ---
-    function renderizarTodo() {
-      const grid = document.getElementById('productGrid');
-      grid.innerHTML = '';
-
-      const filtrados = getDatosFiltrados();
-
-      if (filtrados.length === 0) {
-        grid.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color: var(--text-muted); padding: 40px 0;">No se encontraron piezas en esta vista.</p>`;
-        renderChart(activeChartType, filtrados, 'activeChart');
-        return;
-      }
-
-      filtrados.forEach(p => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.innerHTML = `
-          <div>
-            <div class="sku">${p.sku}</div>
-            <h3>${p.nombre}</h3>
-            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px;">${p.categoria}</div>
-            <div class="price">S/ ${(p.precio || 0).toFixed(2)}</div>
-          </div>
-          <div>
-            ${!p.vendido && !p.porPagar ? `
-              <button class="action-btn" onclick="venderProductoFirebase('${p.id}')">Vender</button>
-              <button class="action-btn secondary" onclick="togglePorPagarFirebase('${p.id}', true)">Por Pagar</button>
-            ` : ''}
-            ${p.porPagar ? `
-              <button class="action-btn" onclick="pagarProductoFirebase('${p.id}')">Confirmar Pago</button>
-            ` : ''}
-            ${p.vendido ? `
-              <button class="action-btn secondary" onclick="deshacerVentaFirebase('${p.id}')">Revertir Venta</button>
-            ` : ''}
-            <button class="action-btn secondary" style="margin-top:5px; color:#c0392b; border: 1px solid #e74c3c; background:none;" onclick="eliminarProductoFirebase('${p.id}')"><i class="fa-solid fa-trash"></i></button>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-
-      renderChart(activeChartType, getDatosFiltrados(), 'activeChart');
-    }
-
-    // --- ACCIONES FIREBASE (CRUD) ---
-    async function guardarProductoFirebase(e) {
-      e.preventDefault();
-      const id = document.getElementById('prodId').value;
-      const sku = document.getElementById('prodSku').value.trim();
-      const nombre = document.getElementById('prodNombre').value.trim();
-      const categoria = document.getElementById('prodCategoria').value;
-      const precio = parseFloat(document.getElementById('prodPrecio').value) || 0;
-
-      const payload = {
-        sku,
-        nombre,
-        categoria,
-        precio,
-        vendido: false,
-        porPagar: false,
-        fechaActualizacion: new Date().toISOString()
-      };
-
-      try {
-        if (id) {
-          await window.fbUpdateDoc(window.fbDoc(window.db, "inventario", id), payload);
-          showToast("✅ Pieza actualizada");
-        } else {
-          payload.fechaCreacion = new Date().toISOString();
-          const docRef = window.fbDoc(window.fbCollection(window.db, "inventario"));
-          await window.fbSetDoc(docRef, payload);
-          showToast("✨ Pieza guardada en Firebase");
-        }
-        closeModal();
-      } catch (err) {
-        console.error("Error al guardar:", err);
-        showToast("❌ Error al guardar el producto");
-      }
-    }
-
-    async function venderProductoFirebase(id) {
-      try {
-        await window.fbUpdateDoc(window.fbDoc(window.db, "inventario", id), {
-          vendido: true,
-          porPagar: false,
-          fechaVenta: new Date().toISOString()
-        });
-        showToast("✨ Venta registrada con éxito");
-      } catch (err) {
-        showToast("❌ Error al registrar venta");
-      }
-    }
-
-    async function deshacerVentaFirebase(id) {
-      try {
-        await window.fbUpdateDoc(window.fbDoc(window.db, "inventario", id), {
-          vendido: false,
-          fechaVenta: null
-        });
-        showToast("↩️ Venta revertida");
-      } catch (err) {
-        showToast("❌ Error al revertir venta");
-      }
-    }
-
-    async function togglePorPagarFirebase(id, estado) {
-      try {
-        await window.fbUpdateDoc(window.fbDoc(window.db, "inventario", id), {
-          porPagar: estado,
-          vendido: false
-        });
-        showToast(estado ? "⏳ Marcado como por pagar" : "Restaurado");
-      } catch (err) {
-        showToast("❌ Error al cambiar estado");
-      }
-    }
-
-    async function pagarProductoFirebase(id) {
-      try {
-        await window.fbUpdateDoc(window.fbDoc(window.db, "inventario", id), {
-          porPagar: false,
-          vendido: true,
-          fechaVenta: new Date().toISOString()
-        });
-        showToast("✅ Pago asentado");
-      } catch (err) {
-        showToast("❌ Error al confirmar pago");
-      }
-    }
-
-    async function eliminarProductoFirebase(id) {
-      if (confirm("¿Seguro de eliminar esta pieza de Firebase?")) {
-        try {
-          await window.fbDeleteDoc(window.fbDoc(window.db, "inventario", id));
-          showToast("🗑️ Pieza eliminada");
-        } catch (err) {
-          showToast("❌ Error al eliminar");
-        }
-      }
-    }
-
-    // --- LÓGICA DE FILTROS & BÚSQUEDA ---
-    function normalizarTexto(txt) {
-      return String(txt || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    }
-
-    function getDatosFiltrados() {
-      return inventario.filter(p => {
-        if (filtroActivo === 'activos' && (p.vendido || p.porPagar)) return false;
-        if (filtroActivo === 'vendidos' && !p.vendido) return false;
-        if (filtroActivo === 'por-pagar' && !p.porPagar) return false;
-
-        if (terminoBusqueda) {
-          const q = normalizarTexto(terminoBusqueda);
-          const nom = normalizarTexto(p.nombre);
-          const sku = normalizarTexto(p.sku);
-          const cat = normalizarTexto(p.categoria);
-          if (!nom.includes(q) && !sku.includes(q) && !cat.includes(q)) return false;
-        }
-        return true;
-      });
-    }
-
-    function setFilter(filtro) {
-      filtroActivo = filtro;
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.filter === filtro);
-      });
-      renderizarTodo();
-    }
-
-    function onSearchInput(val) {
-      terminoBusqueda = val.trim();
-      renderizarTodo();
-    }
-
-    // --- ACTUALIZAR KPIS ---
-    function actualizarKPIs() {
-      const total = inventario.length;
-      const valor = inventario.filter(p => !p.vendido).reduce((acc, p) => acc + (p.precio || 0), 0);
-      const ventas = inventario.filter(p => p.vendido).length;
-      const porPagar = inventario.filter(p => p.porPagar).reduce((acc, p) => acc + (p.precio || 0), 0);
-
-      document.getElementById('kpiTotal').innerText = total;
-      document.getElementById('kpiValor').innerText = `S/ ${valor.toFixed(2)}`;
-      document.getElementById('kpiVentas').innerText = ventas;
-      document.getElementById('kpiPorPagar').innerText = `S/ ${porPagar.toFixed(2)}`;
-    }
-
-    // --- GRÁFICOS (CHART.JS) ---
-    function selectChart(type) {
-      activeChartType = type;
-      document.querySelectorAll('.chart-tab').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.chart === type);
-      });
-      renderChart(type, getDatosFiltrados(), 'activeChart');
-    }
-
-    function renderChart(type, data, canvasId) {
-      const ctx = document.getElementById(canvasId);
-      if (!ctx) return;
-
-      if (currentChart) {
-        currentChart.destroy();
-      }
-
-      let config = null;
-
-      if (type === 'category') {
-        const map = {};
-        data.forEach(p => map[p.categoria] = (map[p.categoria] || 0) + 1);
-        config = {
-          type: 'doughnut',
-          data: {
-            labels: Object.keys(map),
-            datasets: [{
-              data: Object.values(map),
-              backgroundColor: ['#A9822F', '#D4AF37', '#E5C158', '#F4EAD3']
-            }]
-          },
-          options: { responsive: true, maintainAspectRatio: false }
-        };
-      } else if (type === 'sales') {
-        const ventas = inventario.filter(p => p.vendido && p.fechaVenta);
-        const mapDia = {};
-        ventas.forEach(p => {
-          const dia = new Date(p.fechaVenta).toISOString().split('T')[0];
-          mapDia[dia] = (mapDia[dia] || 0) + (p.precio || 0);
-        });
-        const sorted = Object.keys(mapDia).sort().slice(-10);
-        config = {
-          type: 'line',
-          data: {
-            labels: sorted,
-            datasets: [{
-              label: 'Ventas S/',
-              data: sorted.map(d => mapDia[d]),
-              borderColor: '#A9822F',
-              fill: false
-            }]
-          },
-          options: { responsive: true, maintainAspectRatio: false }
-        };
-      }
-
-      if (config) {
-        currentChart = new Chart(ctx, config);
-      }
-    }
-
-    // --- MODAL Y TOAST ---
-    function openModal() {
-      document.getElementById('productForm').reset();
-      document.getElementById('prodId').value = '';
-      document.getElementById('modalTitle').innerText = 'Nueva Pieza';
-      document.getElementById('productModal').classList.add('active');
-    }
-
-    function closeModal() {
-      document.getElementById('productModal').classList.remove('active');
-    }
-
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      toast.innerText = msg;
-      toast.style.display = 'block';
-      setTimeout(() => { toast.style.display = 'none'; }, 3000);
-    }
-
-    // Iniciar app
-    window.addEventListener('DOMContentLoaded', () => {
-      iniciarSincronizacionFirebase();
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(() => {
+      msg.style.color = 'green';
+      msg.innerText = "¡Producto y fórmulas registradas con éxito!";
+      document.getElementById('eoqForm').reset();
+      btn.disabled = false;
+    })
+    .catch(err => {
+      msg.style.color = 'red';
+      msg.innerText = "Error al guardar el registro.";
+      console.error(err);
+      btn.disabled = false;
     });
-  </script>
+  });
+</script>
+
 </body>
 </html>
